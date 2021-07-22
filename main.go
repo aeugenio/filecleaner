@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -25,7 +27,7 @@ func init() {
 	flag.StringVar(&flagPath, "path", "", "the path of the directory to prune files from")
 	flag.StringVar(&flagLogPath, "logPath", "", "the path to write filecleaner.log to; if not specified, logs are written to stdout")
 	flag.BoolVar(&flagDryRun, "dryRun", false, "true to enable dry-run mode which only displays files that will be deleted but does not delete them")
-	flag.StringVar(&flagDuration, "duration", "", "the duration of time to evaluate the last modDate by. Calculated as now()-duration.  A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as \"300ms\", \"-1.5h\" or \"2h45m\". Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\".")
+	flag.StringVar(&flagDuration, "duration", "90", "the duration of time in days to evaluate the last modDate by. Calculated as now()-duration")
 	flag.StringVar(&flagExactTime, "exactTime", "", "the time to use in identifying files to delete.  any files with a modTime before this value will be deleted.")
 	flag.Parse()
 
@@ -92,21 +94,55 @@ func findFilesToDelete(path string) (paths []string, infos []os.FileInfo, err er
 			return e
 		}
 
-		if !info.IsDir() {
-			isBefore := false
-			if !exactTime.IsZero() {
-				if info.ModTime().Before(exactTime) {
-					isBefore = true
-				}
-			} else {
-				if info.ModTime().Before(time.Now().Add(-duration)) {
-					isBefore = true
-				}
+		log.Println("path=", path)
+		log.Println("info=", info.Name())
+
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
+			tokens := strings.Split(info.Name(), "-")
+			mod := 0
+
+			if len(tokens) == 4 {
+				mod = -1
+			} else if len(tokens) == 6 {
+				mod = +1
 			}
 
-			if isBefore {
-				paths = append(paths, p)
-				infos = append(infos, info)
+			year, e := strconv.Atoi(tokens[1+mod])
+			if e != nil {
+				log.Println("error with year in file ", path+"/"+info.Name())
+				return e
+			}
+
+			month, e := strconv.Atoi(tokens[2+mod])
+			if e != nil {
+				log.Println("error with month in file ", path+"/"+info.Name())
+				return e
+			}
+
+			day, e := strconv.Atoi(tokens[3+mod])
+			if e != nil {
+				log.Println("error with day in file ", path+"/"+info.Name())
+				return e
+			}
+
+			fileTime := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+
+			if !info.IsDir() {
+				isBefore := false
+				if !exactTime.IsZero() {
+					if fileTime.Before(exactTime) {
+						isBefore = true
+					}
+				} else {
+					if fileTime.Before(time.Now().Add(-time.Hour * 24 * 90)) {
+						isBefore = true
+					}
+				}
+
+				if isBefore {
+					paths = append(paths, p)
+					infos = append(infos, info)
+				}
 			}
 		}
 
