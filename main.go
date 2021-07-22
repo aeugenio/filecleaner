@@ -26,7 +26,7 @@ func init() {
 	flag.StringVar(&flagLogPath, "logPath", "", "the path to write filecleaner.log to; if not specified, logs are written to stdout")
 	flag.BoolVar(&flagDryRun, "dryRun", false, "true to enable dry-run mode which only displays files that will be deleted but does not delete them")
 	flag.StringVar(&flagDuration, "duration", "", "the duration of time to evaluate the last modDate by. Calculated as now()-duration.  A duration string is a possibly signed sequence of decimal numbers, each with optional fraction and a unit suffix, such as \"300ms\", \"-1.5h\" or \"2h45m\". Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\".")
-	flag.StringVar(&flagExactTime, "exactTime", "", "the time to use in identifying files to delete.  any files with a modTime before this value will be deleted.  setting this flag causes the program to use it and not duration regardless of duration being set or not")
+	flag.StringVar(&flagExactTime, "exactTime", "", "the time to use in identifying files to delete.  any files with a modTime before this value will be deleted.")
 	flag.Parse()
 
 	log.Println("flagPath =", flagPath)
