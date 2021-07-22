@@ -20,6 +20,17 @@ var duration time.Duration
 var exactTime time.Time
 var logFile *os.File
 
+/*
+i made some assumptions about what kind of program would be needed by the vague description ahead of time.  initially,
+i used go 1.16 and you can see this at https://github.com/aeugenio/filecleaner/blob/main/main.go  then, i was reading
+about the qualified ide's environment and it said it used go 1.12, so i created
+https://github.com/aeugenio/filecleaner/blob/go-1.12/main.go  which uses the older filepath.Walk function.
+
+also, i'll call out that qualified said we'd only have access to the standard go libs, so i didnt use zerolog or viper
+for logs and cli parsing.  that's what i've used in previous projects.  i'd much prefer to have log.Debug() and log.Info()
+all over rather than Log.Println()
+*/
+
 func init() {
 	var err error
 
